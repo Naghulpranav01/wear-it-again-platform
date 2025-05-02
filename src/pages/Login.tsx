@@ -7,39 +7,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { mockUsers } from '@/data/mockData';
+import { useLogin } from '@/hooks/useApi';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Use the login mutation hook
+  const { mutate: login, isPending: isLoading } = useLogin();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(user => user.email === email && user.password === password);
-
-      if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        toast({
-          title: "Login successful",
-          description: `Welcome back, ${user.name}!`
-        });
-        navigate('/');
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password. Please try again.",
-          variant: "destructive"
-        });
+    
+    login(
+      { email, password },
+      {
+        onSuccess: (userData) => {
+          // Store user data in localStorage
+          localStorage.setItem('currentUser', JSON.stringify(userData));
+          
+          toast({
+            title: "Login successful",
+            description: `Welcome back, ${userData.name}!`
+          });
+          
+          navigate('/');
+        },
+        onError: (error) => {
+          toast({
+            title: "Login failed",
+            description: error.message || "Invalid email or password. Please try again.",
+            variant: "destructive"
+          });
+        }
       }
-      setIsLoading(false);
-    }, 1000);
+    );
   };
 
   return (
