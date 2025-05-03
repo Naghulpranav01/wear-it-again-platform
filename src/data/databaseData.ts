@@ -59,6 +59,8 @@ export function convertToFrontendFormat(dbItems: DatabaseClothingItem[]): Clothi
         { days: 8, price: item.rental_price * 1.8 },
         { days: 16, price: item.rental_price * 3 }
       ],
+      price: item.rental_price * 5, // Adding the required price property (estimated retail price)
+      featured: item.status === 'Available', // Adding the required featured property, setting it to true for available items
       isAvailable: item.status === 'Available'
     };
   });
