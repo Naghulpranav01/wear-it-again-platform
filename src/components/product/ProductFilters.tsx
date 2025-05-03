@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { databaseClothingItems } from '@/data/databaseData';
 
 interface ProductFiltersProps {
   onApplyFilters: (filters: {
@@ -14,14 +15,20 @@ interface ProductFiltersProps {
 }
 
 const ProductFilters: React.FC<ProductFiltersProps> = ({ onApplyFilters }) => {
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 250]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
-  const categories = ["Dresses", "Tops", "Bottoms", "Outerwear"];
-  const sizes = ["XS", "S", "M", "L", "XL"];
-  const brands = ["Reformation", "Theory", "Marchesa", "Citizens of Humanity", "Vince", "Zimmermann", "AllSaints", "Equipment"];
+  // Get unique categories from database items
+  const dbCategories = Array.from(new Set(databaseClothingItems.map(item => item.category)));
+  const categories = ["Dresses", "Tops", "Bottoms", "Outerwear", ...dbCategories];
+  
+  const sizes = ["XS", "S", "M", "L", "XL", "32"];
+  
+  // Get unique brands/categories from database items
+  const dbBrands = Array.from(new Set(databaseClothingItems.map(item => item.category)));
+  const brands = ["Reformation", "Theory", "Marchesa", "Citizens of Humanity", "Vince", "Zimmermann", "AllSaints", "Equipment", ...dbBrands];
 
   const handleCategoryChange = (category: string, checked: boolean) => {
     if (checked) {
@@ -61,24 +68,28 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ onApplyFilters }) => {
   };
 
   const handleClearFilters = () => {
-    setPriceRange([0, 200]);
+    setPriceRange([0, 250]);
     setSelectedCategories([]);
     setSelectedSizes([]);
     setSelectedBrands([]);
     onApplyFilters({
-      priceRange: [0, 200],
+      priceRange: [0, 250],
       categories: [],
       sizes: [],
       brands: []
     });
   };
 
+  // Remove duplicates from arrays
+  const uniqueCategories = Array.from(new Set(categories));
+  const uniqueBrands = Array.from(new Set(brands));
+
   return (
     <div className="space-y-6">
       <div>
         <h3 className="font-medium mb-3">Price Range (4-day rental)</h3>
         <div className="mb-2">
-          <Slider defaultValue={[0, 200]} max={200} step={5} onValueChange={handlePriceChange} value={priceRange} />
+          <Slider defaultValue={[0, 250]} max={250} step={5} onValueChange={handlePriceChange} value={priceRange} />
         </div>
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>${priceRange[0]}</span>
@@ -89,7 +100,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ onApplyFilters }) => {
       <div>
         <h3 className="font-medium mb-3">Categories</h3>
         <div className="space-y-2">
-          {categories.map((category) => (
+          {uniqueCategories.map((category) => (
             <div key={category} className="flex items-center">
               <Checkbox 
                 id={`category-${category}`} 
@@ -124,8 +135,8 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ onApplyFilters }) => {
 
       <div>
         <h3 className="font-medium mb-3">Brands</h3>
-        <div className="space-y-2">
-          {brands.map((brand) => (
+        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+          {uniqueBrands.map((brand) => (
             <div key={brand} className="flex items-center">
               <Checkbox 
                 id={`brand-${brand}`} 

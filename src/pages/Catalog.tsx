@@ -6,6 +6,7 @@ import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/product/ProductCard';
 import ProductFilters from '@/components/product/ProductFilters';
 import { mockClothingItems, ClothingItem } from '@/data/mockData';
+import { frontendClothingItems } from '@/data/databaseData';
 import { Button } from '@/components/ui/button';
 import { Filter, SlidersHorizontal } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,7 +20,9 @@ import {
 
 const Catalog = () => {
   const [searchParams] = useSearchParams();
-  const [displayedItems, setDisplayedItems] = useState<ClothingItem[]>(mockClothingItems);
+  // Use combined data from both mock data and database data
+  const combinedItems = [...mockClothingItems, ...frontendClothingItems];
+  const [displayedItems, setDisplayedItems] = useState<ClothingItem[]>(combinedItems);
   const [showFilters, setShowFilters] = useState(false);
   const isMobile = useIsMobile();
   
@@ -27,7 +30,7 @@ const Catalog = () => {
   const initialSubcategory = searchParams.get('subcategory');
 
   useEffect(() => {
-    let filtered = [...mockClothingItems];
+    let filtered = [...combinedItems];
     
     if (initialCategory) {
       filtered = filtered.filter(item => 
@@ -50,7 +53,7 @@ const Catalog = () => {
     sizes: string[];
     brands: string[];
   }) => {
-    let filtered = [...mockClothingItems];
+    let filtered = [...combinedItems];
     
     // Filter by price
     filtered = filtered.filter(item => {
