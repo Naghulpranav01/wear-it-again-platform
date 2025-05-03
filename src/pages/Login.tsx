@@ -7,43 +7,81 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useLogin } from '@/hooks/useApi';
+import { useLogin, useAdminLogin } from '@/hooks/useApi';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Use the login mutation hook
-  const { mutate: login, isPending: isLoading } = useLogin();
+  // Use the appropriate login mutation hook based on user type
+  const { mutate: userLogin, isPending: isUserLoading } = useLogin();
+  const { mutate: adminLogin, isPending: isAdminLoading } = useAdminLogin();
+
+  const isLoading = isUserLoading || isAdminLoading;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    login(
-      { email, password },
-      {
-        onSuccess: (userData) => {
-          // Store user data in localStorage
-          localStorage.setItem('currentUser', JSON.stringify(userData));
-          
-          toast({
-            title: "Login successful",
-            description: `Welcome back, ${userData.name}!`
-          });
-          
-          navigate('/');
-        },
-        onError: (error) => {
-          toast({
-            title: "Login failed",
-            description: error.message || "Invalid email or password. Please try again.",
-            variant: "destructive"
-          });
+    if (isAdmin) {
+      // Admin login
+      adminLogin(
+        { email, password },
+        {
+          onSuccess: (userData) => {
+            // Store admin data in localStorage
+            localStorage.setItem('currentUser', JSON.stringify({
+              ...userData,
+              isAdmin: true
+            }));
+            
+            toast({
+              title: "Admin login successful",
+              description: `Welcome back, ${userData.name}!`
+            });
+            
+            navigate('/admin');
+          },
+          onError: (error) => {
+            toast({
+              title: "Login failed",
+              description: error.message || "Invalid email or password. Please try again.",
+              variant: "destructive"
+            });
+          }
         }
-      }
-    );
+      );
+    } else {
+      // User login
+      userLogin(
+        { email, password },
+        {
+          onSuccess: (userData) => {
+            // Store user data in localStorage
+            localStorage.setItem('currentUser', JSON.stringify({
+              ...userData,
+              isAdmin: false
+            }));
+            
+            toast({
+              title: "Login successful",
+              description: `Welcome back, ${userData.name}!`
+            });
+            
+            navigate('/');
+          },
+          onError: (error) => {
+            toast({
+              title: "Login failed",
+              description: error.message || "Invalid email or password. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }
+      );
+    }
   };
 
   return (
@@ -85,12 +123,25 @@ const Login = () => {
               />
             </div>
 
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="admin-login"
+                checked={isAdmin}
+                onChange={(e) => setIsAdmin(e.target.checked)}
+                className="rounded border-gray-300 text-fashion focus:ring-fashion"
+              />
+              <label htmlFor="admin-login" className="text-sm">
+                Login as Admin
+              </label>
+            </div>
+
             <Button
               type="submit"
               className="w-full bg-fashion hover:bg-fashion-dark"
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? "Signing in..." : `Sign In as ${isAdmin ? 'Admin' : 'User'}`}
             </Button>
           </form>
 

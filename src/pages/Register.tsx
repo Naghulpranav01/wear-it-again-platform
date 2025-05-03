@@ -8,16 +8,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { useRegister } from '@/hooks/useApi';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Use the register mutation
+  const { mutate: register, isPending: isLoading } = useRegister();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,28 +45,40 @@ const Register = () => {
       return;
     }
 
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      const newUser = {
-        id: Date.now().toString(),
+    // Register the user
+    register(
+      {
         name,
         email,
-        password
-      };
-      
-      // In a real app, you would send this data to your API
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
-      
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created."
-      });
-      
-      navigate('/');
-      setIsLoading(false);
-    }, 1000);
+        password,
+        phone,
+        location,
+        type: 'Customer' // Default type for new registrations
+      },
+      {
+        onSuccess: (userData) => {
+          // Store user data in localStorage
+          localStorage.setItem('currentUser', JSON.stringify({
+            ...userData,
+            isAdmin: false
+          }));
+          
+          toast({
+            title: "Registration successful",
+            description: "Your account has been created."
+          });
+          
+          navigate('/');
+        },
+        onError: (error) => {
+          toast({
+            title: "Registration failed",
+            description: error.message || "Could not create your account. Please try again.",
+            variant: "destructive"
+          });
+        }
+      }
+    );
   };
 
   return (
@@ -94,6 +111,29 @@ const Register = () => {
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="9876543210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                placeholder="Your City"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
                 required
               />
             </div>
